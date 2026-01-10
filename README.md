@@ -2,6 +2,8 @@
 
 An artistic visualization of Conway's Game of Life as an evolving mind map network. Ideas (nodes) spread, evolve, and die based on their connections to other ideas.
 
+![demo](https://github.com/user-attachments/assets/1603b979-f3c4-4e60-b54b-01d12ad370cb)
+
 ## Features
 
 - **3D Network Visualization** - Navigate a three-dimensional mind map with orbital camera controls
