@@ -5,7 +5,12 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dev": "electron . --dev"
+    "dev": "electron . --dev",
+    "build": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac --dir",
+    "dist:win": "electron-builder --win --dir",
+    "pack:zip": "electron-builder --mac zip"
   },
   "keywords": [
     "conway",
@@ -18,10 +23,35 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^28.0.0"
+    "electron": "^28.0.0",
+    "electron-builder": "^26.4.0"
   },
   "dependencies": {
     "three": "^0.160.0"
+  },
+  "build": {
+    "appId": "com.genuary.conways-mind-map",
+    "productName": "Conway's Game of Life",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "index.html",
+      "src/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "target": ["zip"],
+      "category": "public.app-category.entertainment"
+    },
+    "win": {
+      "target": ["zip"]
+    },
+    "linux": {
+      "target": ["zip"]
+    }
   }
 }
-
