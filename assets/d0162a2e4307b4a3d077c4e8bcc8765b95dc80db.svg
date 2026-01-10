@@ -1,0 +1,22 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Blurred-gradient-node">
+<g id="Ellipse 1" filter="url(#filter0_f_56_8)">
+<circle cx="140" cy="140" r="120" fill="var(--fill-0, #E71C1C)"/>
+</g>
+<g id="Ellipse 2" filter="url(#filter1_f_56_8)">
+<circle cx="139.5" cy="139.5" r="62.5" fill="var(--fill-0, #FF6344)"/>
+</g>
+</g>
+<defs>
+<filter id="filter0_f_56_8" x="0" y="0" width="280" height="280" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_56_8"/>
+</filter>
+<filter id="filter1_f_56_8" x="57" y="57" width="165" height="165" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feGaussianBlur stdDeviation="10" result="effect1_foregroundBlur_56_8"/>
+</filter>
+</defs>
+</svg>

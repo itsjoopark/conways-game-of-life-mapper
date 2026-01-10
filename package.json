@@ -1,0 +1,27 @@
+{
+  "name": "conways-mind-map",
+  "version": "1.0.0",
+  "description": "Conway's Game of Life visualized as an evolving mind map network",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": [
+    "conway",
+    "game-of-life",
+    "mind-map",
+    "three.js",
+    "visualization",
+    "generative-art"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  },
+  "dependencies": {
+    "three": "^0.160.0"
+  }
+}
+

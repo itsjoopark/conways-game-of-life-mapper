@@ -1,0 +1,532 @@
+/* ===== CSS Variables ===== */
+:root {
+  --bg-cream: #F0EEE9;
+  --bg-sidebar: rgba(240, 238, 233, 0.75);
+  --text-primary: #2D2A26;
+  --text-secondary: #6B6560;
+  --text-muted: #9E9890;
+  --accent-coral: #FB522E;
+  --accent-teal: #5D9F59;
+  --accent-blue: #214175;
+  --accent-yellow: #FFCB64;
+  --accent-pink: #FF8992;
+  --border-light: rgba(45, 42, 38, 0.08);
+  --shadow-soft: rgba(45, 42, 38, 0.06);
+  --shadow-medium: rgba(45, 42, 38, 0.1);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --font-serif: 'Playfair Display', 'Georgia', 'Times New Roman', serif;
+  --font-sans: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', monospace;
+  --sidebar-width: 280px;
+  --transition-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-cream);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-app-region: drag;
+}
+
+/* ===== App Layout ===== */
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+}
+
+/* ===== Sidebar Toggle Button ===== */
+.sidebar-toggle {
+  position: absolute;
+  left: var(--sidebar-width);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 100;
+  width: 28px;
+  height: 56px;
+  background: rgba(240, 238, 233, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-left: none;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.5s var(--transition-smooth);
+  -webkit-app-region: no-drag;
+  box-shadow: 2px 0 8px var(--shadow-soft);
+}
+
+.sidebar-toggle:hover {
+  background: var(--accent-coral);
+  box-shadow: 2px 0 12px rgba(251, 82, 46, 0.3);
+}
+
+.sidebar-toggle .toggle-icon {
+  transition: transform 0.5s var(--transition-smooth);
+}
+
+.sidebar-toggle.collapsed {
+  left: 0;
+}
+
+.sidebar-toggle.collapsed .toggle-icon {
+  transform: rotate(180deg);
+}
+
+.sidebar-toggle svg {
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.sidebar-toggle:hover svg {
+  color: white;
+}
+
+/* ===== Sidebar ===== */
+#sidebar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--sidebar-width);
+  height: 100%;
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  padding: 60px 24px 24px;
+  -webkit-app-region: no-drag;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform 0.5s var(--transition-smooth), 
+              opacity 0.4s var(--transition-smooth);
+  transform: translateX(0);
+  opacity: 1;
+  z-index: 50;
+}
+
+#sidebar.collapsed {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sidebar-header {
+  margin-bottom: 32px;
+  opacity: 1;
+  transition: opacity 0.3s var(--transition-smooth);
+}
+
+#sidebar.collapsed .sidebar-header,
+#sidebar.collapsed .controls-section,
+#sidebar.collapsed .stats-section,
+#sidebar.collapsed .sidebar-footer {
+  opacity: 0;
+}
+
+.sidebar-header h1 {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.sidebar-header .subtitle {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: 0.2px;
+}
+
+/* ===== Controls Section ===== */
+.controls-section {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border-light);
+  transition: opacity 0.3s var(--transition-smooth);
+}
+
+.controls-section:last-of-type {
+  border-bottom: none;
+}
+
+.controls-section.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* ===== Control Groups ===== */
+.control-group {
+  margin-bottom: 20px;
+}
+
+.control-group:last-child {
+  margin-bottom: 0;
+}
+
+.control-group label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.label-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.label-value {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background: var(--bg-cream);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+/* ===== Range Sliders ===== */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border-light);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--accent-coral);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px var(--shadow-soft);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 3px 10px rgba(224, 122, 95, 0.3);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  transform: scale(1.05);
+}
+
+/* ===== Toggle Switches ===== */
+.toggle-group {
+  margin-bottom: 14px;
+}
+
+.toggle-group:last-child {
+  margin-bottom: 0;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-label input {
+  display: none;
+}
+
+.toggle-switch {
+  width: 40px;
+  height: 22px;
+  background: var(--border-light);
+  border-radius: 11px;
+  position: relative;
+  transition: background 0.25s ease;
+  margin-right: 12px;
+}
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px var(--shadow-soft);
+  transition: transform 0.25s ease;
+}
+
+.toggle-label input:checked + .toggle-switch {
+  background: var(--accent-teal);
+}
+
+.toggle-label input:checked + .toggle-switch::after {
+  transform: translateX(18px);
+}
+
+.toggle-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ===== Buttons ===== */
+.btn {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.btn-primary {
+  background: var(--accent-coral);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #D16A50;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(224, 122, 95, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: var(--bg-cream);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+}
+
+.btn-secondary:hover {
+  background: var(--accent-coral);
+  color: white;
+  border-color: var(--accent-coral);
+}
+
+.btn .icon {
+  font-size: 10px;
+}
+
+/* ===== Stats Section ===== */
+.stats-section {
+  background: rgba(240, 238, 233, 0.6);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: auto;
+  transition: opacity 0.3s var(--transition-smooth);
+  border: 1px solid var(--border-light);
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.stat:not(:last-child) {
+  border-bottom: 1px solid var(--border-light);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.stat-value {
+  font-size: 14px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* ===== Sidebar Footer ===== */
+.sidebar-footer {
+  margin-top: 20px;
+  text-align: center;
+  transition: opacity 0.3s var(--transition-smooth);
+}
+
+.sidebar-footer p {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ===== Canvas Container ===== */
+#canvas-container {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-cream);
+  -webkit-app-region: no-drag;
+}
+
+#canvas-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===== Zoom Controls ===== */
+.zoom-controls {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 50;
+}
+
+.zoom-btn {
+  width: 40px;
+  height: 40px;
+  background: rgba(240, 238, 233, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px var(--shadow-soft);
+}
+
+.zoom-btn:hover {
+  background: var(--accent-coral);
+  box-shadow: 0 4px 12px rgba(251, 82, 46, 0.3);
+  transform: translateY(-1px);
+}
+
+.zoom-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px var(--shadow-soft);
+  background: #E04528;
+}
+
+.zoom-btn svg {
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+}
+
+.zoom-btn:hover svg {
+  color: white;
+}
+
+/* ===== Node Tooltip - Minimal Text with Dotted Line ===== */
+.node-tooltip {
+  position: fixed;
+  background: transparent;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.node-tooltip.visible {
+  opacity: 1;
+}
+
+.node-tooltip .connection-count {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  color: var(--accent-coral);
+  margin-right: 3px;
+}
+
+.node-tooltip .tooltip-text {
+  color: var(--text-muted);
+}
+
+/* Dotted line connector */
+.tooltip-line {
+  position: fixed;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tooltip-line.visible {
+  opacity: 1;
+}
+
+.tooltip-line svg {
+  overflow: visible;
+}
+
+.tooltip-line svg line {
+  stroke: var(--text-muted);
+  stroke-width: 1;
+  stroke-dasharray: 4, 4;
+  opacity: 0.5;
+}
+
+/* ===== Scrollbar Styling ===== */
+#sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+#sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-light);
+  border-radius: 3px;
+}
+
+#sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
