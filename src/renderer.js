@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { createFloralNode, updateNodeAnimation } from './node-factory.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { createFloralNode, updateNodeAnimation, setGlassMode, getGlassMode } from './node-factory.js';
 import { ForceDirectedGraph } from './graph-layout.js';
 import { GameOfLifeSimulation } from './simulation.js';
 
@@ -13,6 +14,7 @@ const CONFIG = {
   repulsion: 50,
   autoRotate: false,
   showConnections: true,
+  glassMode: false,
   simulationInterval: 2000 // ms between generations (faster growth)
 };
 
@@ -38,6 +40,15 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(container.clientWidth, container.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 container.appendChild(renderer.domElement);
+
+// CSS2D Renderer for fixed-size labels
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(container.clientWidth, container.clientHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.left = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+container.appendChild(labelRenderer.domElement);
 
 // Controls
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -375,6 +386,7 @@ function animate(currentTime) {
   });
 
   renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
 }
 
 // ===== Event Handlers =====
@@ -384,6 +396,7 @@ function setupEventListeners() {
     camera.aspect = container.clientWidth / container.clientHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(container.clientWidth, container.clientHeight);
+    labelRenderer.setSize(container.clientWidth, container.clientHeight);
   });
 
   // Node count slider
@@ -538,49 +551,77 @@ function setupSoundToggle() {
   }
 }
 
-// ===== Create 3D Text Label =====
-function createTextLabel(text, color = '#FB522E') {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
+// ===== Glass Mode Toggle =====
+function setupGlassModeToggle() {
+  const glassModeToggle = document.getElementById('glassMode');
+  if (glassModeToggle) {
+    glassModeToggle.addEventListener('change', (e) => {
+      CONFIG.glassMode = e.target.checked;
+      setGlassMode(CONFIG.glassMode);
+      regenerateNodes();
+    });
+  }
+}
+
+// ===== Regenerate Nodes (preserving state) =====
+function regenerateNodes() {
+  // Store current node states
+  const nodeStates = nodes.map((node, i) => ({
+    position: node.position.clone(),
+    alive: node.userData.alive,
+    birthTime: node.userData.birthTime,
+    deathTime: node.userData.deathTime,
+    currentOpacity: node.userData.currentOpacity,
+    targetOpacity: node.userData.targetOpacity,
+    graphIndex: node.userData.graphIndex
+  }));
   
-  // Set canvas size
-  canvas.width = 256;
-  canvas.height = 64;
+  // Clear existing nodes
+  nodeGroup.clear();
+  nodes = [];
   
-  // Clear canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  // Draw text
-  ctx.font = '500 24px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  
-  // Draw number in coral
-  ctx.fillStyle = color;
-  const numText = text.split(' ')[0];
-  ctx.fillText(numText, 10, 32);
-  const numWidth = ctx.measureText(numText + ' ').width;
-  
-  // Draw rest in gray
-  ctx.fillStyle = '#9E9890';
-  ctx.fillText('connections', 10 + numWidth, 32);
-  
-  // Create texture
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  
-  // Create sprite
-  const material = new THREE.SpriteMaterial({
-    map: texture,
-    transparent: true,
-    depthWrite: false,
-    depthTest: false
+  // Recreate nodes with new style
+  graph.nodes.forEach((nodeData, index) => {
+    const state = nodeStates[index];
+    const newNode = createFloralNode(nodeData, index);
+    
+    // Restore state
+    if (state) {
+      newNode.position.copy(state.position);
+      newNode.userData.alive = state.alive;
+      newNode.userData.birthTime = state.birthTime;
+      newNode.userData.deathTime = state.deathTime;
+      newNode.userData.currentOpacity = state.currentOpacity;
+      newNode.userData.targetOpacity = state.targetOpacity;
+      newNode.userData.graphIndex = state.graphIndex;
+      
+      // Set scale based on state
+      if (!state.alive) {
+        newNode.scale.setScalar(0.4);
+      }
+    } else {
+      newNode.userData.graphIndex = index;
+      newNode.userData.alive = true;
+      newNode.userData.currentOpacity = 1;
+      newNode.userData.targetOpacity = 1;
+    }
+    
+    nodes.push(newNode);
+    nodeGroup.add(newNode);
   });
   
-  const sprite = new THREE.Sprite(material);
-  sprite.scale.set(50, 12.5, 1);
+  // Remove active label since node references changed
+  removeActiveLabel();
+}
+
+// ===== Create CSS2D Text Label (Fixed 16px Screen Size) =====
+function createTextLabel(connectionCount) {
+  const div = document.createElement('div');
+  div.className = 'connection-label';
+  div.innerHTML = `<span class="count">${connectionCount}</span> connections`;
   
-  return sprite;
+  const label = new CSS2DObject(div);
+  return label;
 }
 
 // ===== Create Dotted Line =====
@@ -607,8 +648,10 @@ function createDottedLine(start, end) {
 function removeActiveLabel() {
   if (activeLabel) {
     scene.remove(activeLabel);
-    activeLabel.material.map.dispose();
-    activeLabel.material.dispose();
+    // CSS2DObject cleanup - remove the DOM element
+    if (activeLabel.element && activeLabel.element.parentNode) {
+      activeLabel.element.parentNode.removeChild(activeLabel.element);
+    }
     activeLabel = null;
   }
   if (activeLabelLine) {
@@ -680,11 +723,11 @@ function setupNodeClickHandler() {
             nodes[i] && nodes[i].userData.alive
           ).length;
           
-          // Create 3D label
-          activeLabel = createTextLabel(liveConnections + ' connections');
+          // Create CSS2D label (fixed 16px screen size)
+          activeLabel = createTextLabel(liveConnections);
           activeLabelTargetNode = clickedNode;
           
-          // Position label
+          // Position label offset from node
           const nodePos = clickedNode.position;
           const offset = new THREE.Vector3(40, 25, 0);
           activeLabel.position.copy(nodePos).add(offset);
@@ -858,6 +901,7 @@ setupEventListeners();
 setupZoomControls();
 setupSidebarToggle();
 setupSoundToggle();
+setupGlassModeToggle();
 setupNodeClickHandler();
 setupNodeDragging();
 initSimulation();

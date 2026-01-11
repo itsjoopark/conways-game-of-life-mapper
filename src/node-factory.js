@@ -1,5 +1,16 @@
 import * as THREE from 'three';
 
+// ===== Glass Mode State =====
+let isGlassMode = false;
+
+export function setGlassMode(enabled) {
+  isGlassMode = enabled;
+}
+
+export function getGlassMode() {
+  return isGlassMode;
+}
+
 // ===== Color Palette - User specified with DARKER, bold colors =====
 // FB522E (coral-red), 214175 (dark blue), FFCB64 (gold), 5D9F59 (green), FF8992 (pink)
 const PALETTES = {
@@ -31,8 +42,16 @@ const PALETTES = {
 
 const PALETTE_KEYS = Object.keys(PALETTES);
 
-// ===== Create Soft Gradient Node =====
+// ===== Create Node (dispatches to soft gradient or glass based on mode) =====
 export function createFloralNode(nodeData, index) {
+  if (isGlassMode) {
+    return createGlassNode(nodeData, index);
+  }
+  return createSoftGradientNode(nodeData, index);
+}
+
+// ===== Create Soft Gradient Node =====
+function createSoftGradientNode(nodeData, index) {
   const group = new THREE.Group();
   
   // Choose a random palette for this node - fully random for diversity
@@ -54,8 +73,120 @@ export function createFloralNode(nodeData, index) {
   group.userData.palette = palette;
   group.userData.paletteKey = paletteKey;
   group.userData.baseSize = baseSize;
+  group.userData.isGlass = false;
   
   return group;
+}
+
+// ===== Create Glass Node (Soft Frosted Glass Style - Matching Figma Reference) =====
+function createGlassNode(nodeData, index) {
+  const group = new THREE.Group();
+  
+  // Choose palette for subtle color tinting
+  const paletteKey = PALETTE_KEYS[Math.floor(Math.random() * PALETTE_KEYS.length)];
+  const palette = PALETTES[paletteKey];
+  
+  // Determine node size based on connections
+  const connectionCount = nodeData.connections?.length || 0;
+  const baseSize = 8 + Math.min(connectionCount * 1.5, 20);
+  
+  // Create frosted glass sprite using canvas
+  const glassSprite = createFrostedGlassSprite(palette, baseSize);
+  group.add(glassSprite);
+  
+  // Set initial position
+  group.position.set(nodeData.x, nodeData.y, nodeData.z);
+  
+  // Store metadata
+  group.userData.palette = palette;
+  group.userData.paletteKey = paletteKey;
+  group.userData.baseSize = baseSize;
+  group.userData.isGlass = true;
+  
+  return group;
+}
+
+// ===== Create Frosted Glass Sprite (Soft, Matte - 2X Darker & More Visible) =====
+function createFrostedGlassSprite(palette, size) {
+  const canvas = document.createElement('canvas');
+  const resolution = 256;
+  canvas.width = resolution;
+  canvas.height = resolution;
+  const ctx = canvas.getContext('2d');
+  
+  const centerX = resolution / 2;
+  const centerY = resolution / 2;
+  const maxRadius = resolution / 2;
+  
+  // Parse colors - use both inner and outer for more depth
+  const baseColor = hexToRgb(palette.inner);
+  const outerColor = hexToRgb(palette.outer);
+  
+  // Create frosted glass gradient - 2X DARKER with strong color presence
+  const gradient = ctx.createRadialGradient(
+    centerX, centerY, 0,
+    centerX, centerY, maxRadius
+  );
+  
+  // Much darker, highly visible glass effect - strong color saturation
+  gradient.addColorStop(0, `rgba(${lerp(255, baseColor.r, 0.4)}, ${lerp(255, baseColor.g, 0.4)}, ${lerp(255, baseColor.b, 0.4)}, 1)`);
+  gradient.addColorStop(0.08, `rgba(${lerp(240, baseColor.r, 0.6)}, ${lerp(240, baseColor.g, 0.6)}, ${lerp(240, baseColor.b, 0.6)}, 1)`);
+  gradient.addColorStop(0.2, `rgba(${lerp(200, baseColor.r, 0.75)}, ${lerp(200, baseColor.g, 0.75)}, ${lerp(200, baseColor.b, 0.75)}, 0.98)`);
+  gradient.addColorStop(0.4, `rgba(${lerp(160, baseColor.r, 0.8)}, ${lerp(160, baseColor.g, 0.8)}, ${lerp(160, baseColor.b, 0.8)}, 0.92)`);
+  gradient.addColorStop(0.55, `rgba(${lerp(140, outerColor.r, 0.7)}, ${lerp(140, outerColor.g, 0.7)}, ${lerp(140, outerColor.b, 0.7)}, 0.8)`);
+  gradient.addColorStop(0.7, `rgba(${lerp(120, outerColor.r, 0.6)}, ${lerp(120, outerColor.g, 0.6)}, ${lerp(120, outerColor.b, 0.6)}, 0.55)`);
+  gradient.addColorStop(0.85, `rgba(${outerColor.r}, ${outerColor.g}, ${outerColor.b}, 0.25)`);
+  gradient.addColorStop(0.95, `rgba(${outerColor.r}, ${outerColor.g}, ${outerColor.b}, 0.08)`);
+  gradient.addColorStop(1, `rgba(${outerColor.r}, ${outerColor.g}, ${outerColor.b}, 0)`);
+  
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, resolution, resolution);
+  
+  // Add inner highlight for glass-like depth (smaller, more subtle for darker look)
+  const highlightGradient = ctx.createRadialGradient(
+    centerX * 0.6, centerY * 0.6, 0,
+    centerX * 0.8, centerY * 0.8, maxRadius * 0.35
+  );
+  highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.6)');
+  highlightGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.25)');
+  highlightGradient.addColorStop(0.6, 'rgba(255, 255, 255, 0.08)');
+  highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = highlightGradient;
+  ctx.fillRect(0, 0, resolution, resolution);
+  
+  // Add stronger shadow at bottom for 3D depth
+  ctx.globalCompositeOperation = 'multiply';
+  const shadowGradient = ctx.createRadialGradient(
+    centerX * 1.2, centerY * 1.3, maxRadius * 0.15,
+    centerX, centerY, maxRadius * 0.8
+  );
+  shadowGradient.addColorStop(0, `rgba(${outerColor.r * 0.4}, ${outerColor.g * 0.4}, ${outerColor.b * 0.4}, 0.5)`);
+  shadowGradient.addColorStop(0.35, `rgba(${outerColor.r * 0.5}, ${outerColor.g * 0.5}, ${outerColor.b * 0.5}, 0.2)`);
+  shadowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  
+  ctx.fillStyle = shadowGradient;
+  ctx.fillRect(0, 0, resolution, resolution);
+  
+  // Create texture from canvas
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  
+  // Create sprite material - full opacity
+  const material = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 1.0,
+    depthWrite: false,
+    depthTest: true,
+    blending: THREE.NormalBlending
+  });
+  
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(size * 2.5, size * 2.5, 1);
+  
+  return sprite;
 }
 
 // ===== Create Soft Gradient Sprite =====
@@ -154,11 +285,20 @@ export function updateNodeAnimation(node, currentTime) {
     userData.targetOpacity = 1;
   }
   
-  // Apply opacity to sprite
+  // Apply opacity to all child materials (sprites or meshes)
   const opacity = userData.currentOpacity;
   node.children.forEach(child => {
     if (child.material) {
-      child.material.opacity = opacity;
+      if (userData.isGlass) {
+        // For glass nodes, adjust transmission-based opacity
+        if (child.material.transmission !== undefined) {
+          child.material.opacity = opacity;
+        } else {
+          child.material.opacity = opacity * (child.material.userData?.baseOpacity || child.material.opacity);
+        }
+      } else {
+        child.material.opacity = opacity;
+      }
       child.material.needsUpdate = true;
     }
   });
